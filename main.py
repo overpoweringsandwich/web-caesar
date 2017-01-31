@@ -16,60 +16,38 @@
 #
 import webapp2
 import sys
-low_alpha = "abcdefghijklmnopqrstuvwxyz"
-upper_alpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+import caesar
+import cgi
 
 
+def build_page(textarea_content):
+    rot_label = "<label>Rotate by:</label>"
+    rotation_input = "<input type='number' name='rotation'/>"
+    message_label = "<label>Type a message:</label>"
+    textarea = "<textarea name='message'>" + textarea_content + "</textarea>"
+    submit = "<input type='submit'/>"
+    form = ("<form method='post'>" + rot_label + rotation_input +
+            "<br>" + message_label + textarea +
+            "<br>" + submit + "</form>")
 
-def alphabet_position(letter):
-    '''Takes a letter character and returns it's index value in the alphabet'''
-
-    # Returns the index value of a capital letter
-    if letter.isupper() == True:
-
-        return upper_alpha.index(letter)
-    # Returns the index value of a lower case letter
-    elif letter.islower() == True:
-
-        return low_alpha.index(letter)
-    else:
-        return letter
-        sys.exit()
-
-
-def rotate_character(char, rot):
-    '''Takes a character, rotates it's index, and returns the new character'''
-
-    # finds the index and rotates it, if non-alpha it is returned
-    if char.isalpha() == False:
-        return char
-        sys.exit()
-
-    idx_position = alphabet_position(char)
-    new_index = idx_position + int(rot)
-
-    # Wraps the index around the alphabet and returns new character
-    if char.isupper():
-        rotated_idx = (new_index % 26)
-        return upper_alpha[rotated_idx]
-    else:
-        rotated_idx = (new_index % 26)
-        return low_alpha[rotated_idx]
-
-
-def encrypt(text, rot):
-    '''Takes a string, rotates each character one by one, and returns the new string'''
-    final = ""
-    for i in text:
-        newalpha = rotate_character(i, rot)
-        final = final + newalpha
+    header = "<h2>Web Caesar</h2>"
+    final = header + form
     return final
+
 
 class MainHandler(webapp2.RequestHandler):
     def get(self):
-        message = "Hi"
-        encrypted_message = encrypt(message, 13)
-        self.response.write(encrypted_message)
+        content = build_page("")
+        self.response.write(content)
+
+    def post(self):
+        message = self.request.get("message")
+        rotation = int(self.request.get("rotation"))
+        encrypted_message = caesar.encrypt(message,rotation)
+        escaped_message = cgi.escape(encrypted_message)
+        content = build_page(escaped_message)
+        self.response.write(content)
+
 app = webapp2.WSGIApplication([
     ('/', MainHandler)
 ], debug=True)
